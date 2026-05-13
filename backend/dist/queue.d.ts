@@ -3,7 +3,7 @@ export declare class RequestMap {
     private entries;
     addRequest(message: Message): string;
     addRequestWithUuid(uuid: string, message: Message): void;
-    updateStatus(uuid: string, status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE'): void;
+    updateStatus(uuid: string, status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING' | 'CANCELLED'): void;
     getAll(): EventRequestEntry[];
     getJobId(jobId: string): string | undefined;
     get(uuid: string): EventRequestEntry | undefined;

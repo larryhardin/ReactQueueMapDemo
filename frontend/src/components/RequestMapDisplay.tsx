@@ -6,7 +6,7 @@ interface RequestMapEntry {
   messageText: string
   hasInputChanged: boolean
   isProcessingRequest: boolean
-  status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE'
+  status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING' | 'CANCELLED'
   createdAt: number
 }
 
@@ -44,6 +44,10 @@ function RequestMapDisplay() {
       case 'NEW': return 'new'
       case 'PROCESSING': return 'processing'
       case 'COMPLETED': return 'completed'
+      case 'CANCELLING': return 'cancelling'
+      case 'DUPLICATE': return 'duplicate'
+      case 'WAITING': return 'waiting'
+      case 'CANCELLED': return 'cancelled'
       default: return 'new'
     }
   }

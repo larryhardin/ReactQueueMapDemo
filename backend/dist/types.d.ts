@@ -6,7 +6,7 @@ export interface EventRequestEntry {
     uuid: string;
     jobId: string;
     messageText: string;
-    status: 'NEW' | 'PROCESSING' | 'COMPLETED';
+    status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING'| 'CANCELLED';
     createdAt: number;
 }
 export interface QueueEntry {

@@ -32,24 +32,52 @@ export class RequestMap {
     this.entries.set(uuid, entry);
   }
 
-  updateStatus(uuid: string, status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE'): void {
+  updateStatus(uuid: string, status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING' | 'CANCELLED', waitingOn?: string): EventRequestEntry{
     const entry = this.entries.get(uuid);
     if (entry) {
       entry.status = status;
+      entry.waitingOn = waitingOn;
     }
+    return entry!;
   }
 
   getAll(): EventRequestEntry[] {
     return Array.from(this.entries.values());
   }
 
-  getJobId(jobId: string): string | undefined {
+  //modify this to return an array of matching entries instead of just one, since there could be multiple entries with the same jobId
+  getJobId(jobId: string): EventRequestEntry[] {
+    const matchingJobs: EventRequestEntry[] = [];
     for (const entry of this.entries.values()) {
       if (entry.jobId === jobId) {
-        return entry.uuid;
+        matchingJobs.push(entry);
       }
     }
-    return undefined;
+    return matchingJobs;
+  }
+  
+  getActiveJobIds(jobId: string): EventRequestEntry[] {
+    const matchingJobs: EventRequestEntry[] = [];
+    for (const entry of this.entries.values()) {
+      if (entry.jobId === jobId && ( entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING')) {
+        matchingJobs.push(entry);
+      }
+    }
+    return matchingJobs;
+  }
+
+  getNonMatchingActiveJobIds(jobId: string, uuid: string): EventRequestEntry[] {
+    const matchingJobs: EventRequestEntry[] = [];
+    for (const entry of this.getActiveJobIds(jobId)) {
+      if (entry.uuid !== uuid ) {
+        matchingJobs.push(entry);
+      }
+    }
+    return matchingJobs;
+  }
+
+  removeEntryByUUID(uuid: string): void {
+    this.entries.delete(uuid);
   }
 
   get(uuid: string): EventRequestEntry | undefined {

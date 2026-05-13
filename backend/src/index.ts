@@ -50,6 +50,7 @@ app.post('/api/message', (req: Request, res: Response) => {
 
     // Generate UUID and add to event queue
     // Note: Message will be added to request map when worker processes it
+    
     const uuid = uuidv4();
     eventQueue.enqueue(uuid, { 
       jobId, 

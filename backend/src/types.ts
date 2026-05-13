@@ -12,8 +12,9 @@ export interface EventRequestEntry {
   messageText: string;
   hasInputChanged: boolean;
   isProcessingRequest: boolean;
-  status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE';
+  status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING' | 'CANCELLED';
   createdAt: number;
+  waitingOn?: string; // uuid of the request this entry is waiting on, if applicable
 }
 
 export interface QueueEntry {
