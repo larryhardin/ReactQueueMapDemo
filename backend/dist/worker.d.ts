@@ -1,20 +1,21 @@
 import { WorkerState, QueueEntry } from './types';
 import { RequestMap, EventQueue } from './queue';
+export { WorkerState };
 export declare class Worker {
-    private id;
+    private readonly id;
     private state;
     private queue;
     private requestMapUuid?;
-    private requestMap;
-    private eventQueue;
-    private onStateChange;
-    private isPausedCallback;
+    private readonly requestMap;
+    private readonly eventQueue;
+    private readonly onStateChange;
+    private readonly isPausedCallback;
     constructor(id: number, requestMap: RequestMap, eventQueue: EventQueue, onStateChange: (workerId: number) => void, isPausedCallback: () => boolean);
     getId(): number;
     getState(): 'IDLE' | 'PROCESSING';
     getQueue(): QueueEntry[];
     isIdle(): boolean;
-    processMessage(entry: QueueEntry): Promise<void>;
+    processMessage(queueItem: QueueEntry): Promise<void>;
     private processNextIfAvailable;
     getState_Full(): WorkerState;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import  { useState, useEffect } from 'react'
 
 interface QueueEntry {
   uuid: string
@@ -11,6 +11,7 @@ interface QueueEntry {
 interface WorkerState {
   id: number
   status: 'IDLE' | 'PROCESSING'
+  currentMessage?: QueueEntry
   queue: QueueEntry[]
 }
 
@@ -34,7 +35,13 @@ function WorkerQueuesDisplay() {
 
   return (
     <div className="worker-queues">
-      {workers.map(worker => (
+      {workers.map(worker => {
+        let displayedItems = worker.queue
+        if (displayedItems.length === 0 && worker.currentMessage) {
+          displayedItems = [worker.currentMessage]
+        }
+
+        return (
         <div key={worker.id} className="worker-queue">
           <h3>Queue {worker.id}</h3>
           <div style={{ 
@@ -47,10 +54,10 @@ function WorkerQueuesDisplay() {
             Status: <strong>{worker.status}</strong>
           </div>
           <div className="list-container" style={{ flex: 1 }}>
-            {worker.queue.length === 0 ? (
+            {displayedItems.length === 0 ? (
               <div className="list-empty">No items</div>
             ) : (
-              worker.queue.map((item, idx) => (
+              displayedItems.map((item, idx) => (
                 <div key={`${item.uuid}-${idx}`} className="list-item">
                   <div>
                     <strong>{item.jobId}</strong>
@@ -66,7 +73,7 @@ function WorkerQueuesDisplay() {
             )}
           </div>
         </div>
-      ))}
+      )})}
     </div>
   )
 }

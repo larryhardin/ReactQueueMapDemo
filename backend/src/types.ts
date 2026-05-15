@@ -4,6 +4,7 @@ export interface Message {
   messageText: string; // 50 characters max
   hasInputChanged: boolean; // Tracks whether input has changed since last send
   isProcessingRequest: boolean; // Tracks whether request is being processed
+  timeToWait: number; // Alloted time to wait for the request to be processed.
 }
 
 export interface EventRequestEntry {

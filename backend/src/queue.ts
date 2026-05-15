@@ -45,8 +45,7 @@ export class RequestMap {
     return Array.from(this.entries.values());
   }
 
-  //modify this to return an array of matching entries instead of just one, since there could be multiple entries with the same jobId
-  getJobId(jobId: string): EventRequestEntry[] {
+  getMatchingJobId(jobId: string): EventRequestEntry[] {
     const matchingJobs: EventRequestEntry[] = [];
     for (const entry of this.entries.values()) {
       if (entry.jobId === jobId) {
@@ -56,19 +55,19 @@ export class RequestMap {
     return matchingJobs;
   }
   
-  getActiveJobIds(jobId: string): EventRequestEntry[] {
-    const matchingJobs: EventRequestEntry[] = [];
-    for (const entry of this.entries.values()) {
-      if (entry.jobId === jobId && ( entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING')) {
-        matchingJobs.push(entry);
+  getActiveJobsMatchingJobId(jobId: string): EventRequestEntry[] {
+    const matchingActiveJobs: EventRequestEntry[] = [];
+    for (const entry of this.getMatchingJobId(jobId)) {
+      if ( entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING') {
+        matchingActiveJobs.push(entry);
       }
     }
-    return matchingJobs;
+    return matchingActiveJobs;
   }
 
   getNonMatchingActiveJobIds(jobId: string, uuid: string): EventRequestEntry[] {
     const matchingJobs: EventRequestEntry[] = [];
-    for (const entry of this.getActiveJobIds(jobId)) {
+    for (const entry of this.getActiveJobsMatchingJobId(jobId)) {
       if (entry.uuid !== uuid ) {
         matchingJobs.push(entry);
       }
@@ -92,7 +91,8 @@ export class RequestMap {
 export class EventQueue {
   private queue: QueueEntry[] = [];
 
-  enqueue(uuid: string, message: Message): void {
+  enqueue( message: Message): string {
+    const uuid = uuidv4();
     const entry: QueueEntry = {
       uuid,
       jobId: message.jobId,
@@ -101,6 +101,7 @@ export class EventQueue {
       isProcessingRequest: message.isProcessingRequest ?? false
     };
     this.queue.push(entry);
+    return uuid;
   }
 
   dequeue(): QueueEntry | undefined {

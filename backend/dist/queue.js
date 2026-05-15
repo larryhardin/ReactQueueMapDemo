@@ -3,15 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventQueue = exports.RequestMap = void 0;
 const uuid_1 = require("uuid");
 class RequestMap {
-    constructor() {
-        this.entries = new Map();
-    }
+    entries = new Map();
     addRequest(message) {
         const uuid = (0, uuid_1.v4)();
         const entry = {
             uuid,
             jobId: message.jobId,
             messageText: message.messageText,
+            hasInputChanged: message.hasInputChanged ?? true,
+            isProcessingRequest: message.isProcessingRequest ?? false,
             status: 'NEW',
             createdAt: Date.now()
         };
@@ -23,27 +23,54 @@ class RequestMap {
             uuid,
             jobId: message.jobId,
             messageText: message.messageText,
+            hasInputChanged: message.hasInputChanged ?? true,
+            isProcessingRequest: message.isProcessingRequest ?? false,
             status: 'NEW',
             createdAt: Date.now()
         };
         this.entries.set(uuid, entry);
     }
-    updateStatus(uuid, status) {
+    updateStatus(uuid, status, waitingOn) {
         const entry = this.entries.get(uuid);
         if (entry) {
             entry.status = status;
+            entry.waitingOn = waitingOn;
         }
+        return entry;
     }
     getAll() {
         return Array.from(this.entries.values());
     }
+    //modify this to return an array of matching entries instead of just one, since there could be multiple entries with the same jobId
     getJobId(jobId) {
+        const matchingJobs = [];
         for (const entry of this.entries.values()) {
             if (entry.jobId === jobId) {
-                return entry.uuid;
+                matchingJobs.push(entry);
             }
         }
-        return undefined;
+        return matchingJobs;
+    }
+    getActiveJobIds(jobId) {
+        const matchingJobs = [];
+        for (const entry of this.entries.values()) {
+            if (entry.jobId === jobId && (entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING')) {
+                matchingJobs.push(entry);
+            }
+        }
+        return matchingJobs;
+    }
+    getNonMatchingActiveJobIds(jobId, uuid) {
+        const matchingJobs = [];
+        for (const entry of this.getActiveJobIds(jobId)) {
+            if (entry.uuid !== uuid) {
+                matchingJobs.push(entry);
+            }
+        }
+        return matchingJobs;
+    }
+    removeEntryByUUID(uuid) {
+        this.entries.delete(uuid);
     }
     get(uuid) {
         return this.entries.get(uuid);
@@ -54,16 +81,18 @@ class RequestMap {
 }
 exports.RequestMap = RequestMap;
 class EventQueue {
-    constructor() {
-        this.queue = [];
-    }
-    enqueue(uuid, message) {
+    queue = [];
+    enqueue(message) {
+        const uuid = (0, uuid_1.v4)();
         const entry = {
             uuid,
             jobId: message.jobId,
-            messageText: message.messageText
+            messageText: message.messageText,
+            hasInputChanged: message.hasInputChanged ?? true,
+            isProcessingRequest: message.isProcessingRequest ?? false
         };
         this.queue.push(entry);
+        return uuid;
     }
     dequeue() {
         return this.queue.shift();

@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const uuid_1 = require("uuid");
 const queue_1 = require("./queue");
 const workerpool_1 = require("./workerpool");
+const EventHandler_1 = require("./EventHandler");
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -31,29 +31,29 @@ const workerPool = new workerpool_1.WorkerPool(QUEUE_CONCURRENCY, requestMap, ev
 // Routes
 // Send message from left side
 app.post('/api/message', (req, res) => {
-    try {
-        const { jobId, messageText } = req.body;
-        // Validate input
-        if (!jobId || jobId.length > 18) {
-            return res.status(400).json({ error: 'JobId is required and must be 18 characters or less' });
-        }
-        if (!messageText || messageText.length > 50) {
-            return res.status(400).json({ error: 'MessageText is required and must be 50 characters or less' });
-        }
-        // Generate UUID and add to event queue
-        // Note: Message will be added to request map when worker processes it
-        const uuid = (0, uuid_1.v4)();
-        eventQueue.enqueue(uuid, { jobId, messageText });
-        // Try to process message if queue is running
-        if (!queuePaused) {
-            workerPool.processNextMessage(queuePaused);
-        }
-        res.json({ success: true, uuid });
+    const { jobId, messageText, hasInputChanged, isProcessingRequest, timeToWait } = req.body;
+    const message = {
+        jobId,
+        messageText,
+        hasInputChanged: hasInputChanged ?? true,
+        isProcessingRequest: isProcessingRequest ?? false,
+        timeToWait: timeToWait // Placeholder, can be updated with actual processing time if needed
+    };
+    const eventHandler = new EventHandler_1.EventHandler(eventQueue, requestMap, workerPool);
+    const handleMessagePromise = eventHandler.handleIncomingMessage(message);
+    // Try to process the newly enqueued message if the queue is running.
+    if (!queuePaused) {
+        workerPool.processNextMessage(queuePaused);
     }
-    catch (error) {
-        console.error('Error posting message:', error);
-        res.status(500).json({ error: 'Failed to post message' });
-    }
+    //the handleIncomingMessage needs to return the result status
+    handleMessagePromise
+        .then(() => {
+        res.status(200).json({ message: 'Message received and processed' });
+    })
+        .catch((error) => {
+        console.error('Error handling incoming message:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    });
 });
 // Get request map entries
 app.get('/api/request-map', (req, res) => {
@@ -67,15 +67,7 @@ app.get('/api/event-queue', (req, res) => {
 });
 // Get worker states
 app.get('/api/workers', (req, res) => {
-    const workers = [];
-    for (const [, worker] of workerPool.getWorkers()) {
-        workers.push({
-            id: worker.getId(),
-            status: worker.getState(),
-            queue: worker.getQueue()
-        });
-    }
-    res.json(workers);
+    res.json(workerPool.getState_Full());
 });
 // Pause event queue
 app.post('/api/queue/pause', (req, res) => {

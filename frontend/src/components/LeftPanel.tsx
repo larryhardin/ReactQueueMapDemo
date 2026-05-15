@@ -6,6 +6,7 @@ interface SentMessage {
   hasInputChanged: boolean
   isProcessingRequest: boolean
   timestamp: number
+  timeToWait: number
 }
 
 function LeftPanel() {
@@ -15,6 +16,13 @@ function LeftPanel() {
   const [error, setError] = useState('')
   const [hasInputChanged, setHasInputChanged] = useState(true)
   const [isProcessingRequest, setIsProcessingRequest] = useState(false)
+  const [timeToWait, setTimeToWait] = useState('30000')
+
+  const handleTimeToWaitChange = (value: string) => {
+    if (/^\d*$/.test(value)) {
+      setTimeToWait(value)
+    }
+  }
 
   const handleSendMessage = async () => {
     // Validate inputs
@@ -35,17 +43,43 @@ function LeftPanel() {
       return
     }
 
+    if (!timeToWait) {
+      setError('timeToWait is required')
+      return
+    }
+
+    const parsedTimeToWait = Number.parseInt(timeToWait, 10)
+    const nextMessage: SentMessage = {
+      jobId: jobId.trim(),
+      messageText: messageText.trim(),
+      hasInputChanged,
+      isProcessingRequest,
+      timestamp: Date.now(),
+      timeToWait: parsedTimeToWait
+    }
+
+    setSentMessages((currentMessages) => [
+      nextMessage,
+      ...currentMessages
+    ])
+
     try {
+      // Clear inputs
+      setJobId('')
+      setMessageText('')
+      setError('')
+
       const response = await fetch('http://localhost:2112/api/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
           body: JSON.stringify({
-            jobId: jobId.trim(),
-            messageText: messageText.trim(),
-            hasInputChanged,
-            isProcessingRequest
+            jobId: nextMessage.jobId,
+            messageText: nextMessage.messageText,
+            hasInputChanged: nextMessage.hasInputChanged,
+            isProcessingRequest: nextMessage.isProcessingRequest,
+            timeToWait: nextMessage.timeToWait
           })
       })
 
@@ -54,23 +88,7 @@ function LeftPanel() {
       }
 
       await response.json()
-      
-      // Add message to sent list
-      setSentMessages([
-        {
-          jobId: jobId.trim(),
-          messageText: messageText.trim(),
-          hasInputChanged,
-          isProcessingRequest,
-          timestamp: Date.now()
-        },
-        ...sentMessages
-      ])
 
-      // Clear inputs
-      setJobId('')
-      setMessageText('')
-      setError('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message')
     }
@@ -95,7 +113,7 @@ function LeftPanel() {
             maxLength={18}
             value={jobId}
             onChange={(e) => setJobId(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Enter JobId..."
           />
           <small style={{ marginTop: '3px', display: 'block', color: '#888' }}>
@@ -111,12 +129,25 @@ function LeftPanel() {
             maxLength={50}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Enter message..."
           />
           <small style={{ marginTop: '3px', display: 'block', color: '#888' }}>
             {messageText.length}/50
           </small>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="timeToWait">timeToWait</label>
+          <input
+            id="timeToWait"
+            type="text"
+            inputMode="numeric"
+            value={timeToWait}
+            onChange={(e) => handleTimeToWaitChange(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="30000"
+          />
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>

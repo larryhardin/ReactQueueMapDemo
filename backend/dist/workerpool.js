@@ -4,8 +4,13 @@ exports.WorkerPool = void 0;
 // WorkerPool class for managing multiple workers
 const worker_1 = require("./worker");
 class WorkerPool {
+    workers = new Map();
+    concurrency;
+    requestMap;
+    eventQueue;
+    onStateChange;
+    isPausedCallback;
     constructor(concurrency, requestMap, eventQueue, onStateChange, isPausedCallback) {
-        this.workers = new Map();
         this.concurrency = concurrency;
         this.requestMap = requestMap;
         this.eventQueue = eventQueue;
@@ -31,16 +36,22 @@ class WorkerPool {
         if (paused || this.eventQueue.isEmpty()) {
             return;
         }
-        const idleWorker = this.getIdleWorker();
-        if (!idleWorker) {
-            return;
-        }
-        const entry = this.eventQueue.dequeue();
-        if (entry) {
-            idleWorker.processMessage(entry).catch(err => {
-                console.error(`Worker ${idleWorker.getId()} error processing message:`, err);
-            });
-        }
+        //add a 2 second pause here 
+        setTimeout(() => {
+            if (this.isPausedCallback() || this.eventQueue.isEmpty()) {
+                return;
+            }
+            const idleWorker = this.getIdleWorker();
+            if (!idleWorker) {
+                return;
+            }
+            const entry = this.eventQueue.dequeue();
+            if (entry) {
+                idleWorker.processMessage(entry).catch(err => {
+                    console.error(`Worker ${idleWorker.getId()} error processing message:`, err);
+                });
+            }
+        }, 2000);
     }
     getState_Full() {
         return Array.from(this.workers.values()).map(worker => worker.getState_Full());
