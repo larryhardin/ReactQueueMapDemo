@@ -8,6 +8,8 @@ export declare class EventHandler {
     private readonly workerPool;
     private queuePaused;
     constructor(eventQueue: EventQueue, requestMap: RequestMap, workerPool: WorkerPool);
+    private getTimeoutPromise;
+    private getPollingPromise;
     handleIncomingMessage(message: Message): Promise<void>;
 }
 //# sourceMappingURL=EventHandler.d.ts.map

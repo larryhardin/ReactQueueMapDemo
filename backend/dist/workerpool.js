@@ -36,22 +36,16 @@ class WorkerPool {
         if (paused || this.eventQueue.isEmpty()) {
             return;
         }
-        //add a 2 second pause here 
-        setTimeout(() => {
-            if (this.isPausedCallback() || this.eventQueue.isEmpty()) {
-                return;
-            }
-            const idleWorker = this.getIdleWorker();
-            if (!idleWorker) {
-                return;
-            }
-            const entry = this.eventQueue.dequeue();
-            if (entry) {
-                idleWorker.processMessage(entry).catch(err => {
-                    console.error(`Worker ${idleWorker.getId()} error processing message:`, err);
-                });
-            }
-        }, 2000);
+        const idleWorker = this.getIdleWorker();
+        if (!idleWorker) {
+            return;
+        }
+        const entry = this.eventQueue.dequeue();
+        if (entry) {
+            idleWorker.processMessage(entry).catch(err => {
+                console.error(`Worker ${idleWorker.getId()} error processing message:`, err);
+            });
+        }
     }
     getState_Full() {
         return Array.from(this.workers.values()).map(worker => worker.getState_Full());

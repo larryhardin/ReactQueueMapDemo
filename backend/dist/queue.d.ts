@@ -5,8 +5,8 @@ export declare class RequestMap {
     addRequestWithUuid(uuid: string, message: Message): void;
     updateStatus(uuid: string, status: 'NEW' | 'PROCESSING' | 'COMPLETED' | 'CANCELLING' | 'DUPLICATE' | 'WAITING' | 'CANCELLED', waitingOn?: string): EventRequestEntry;
     getAll(): EventRequestEntry[];
-    getJobId(jobId: string): EventRequestEntry[];
-    getActiveJobIds(jobId: string): EventRequestEntry[];
+    getMatchingJobId(jobId: string): EventRequestEntry[];
+    getActiveJobsMatchingJobId(jobId: string): EventRequestEntry[];
     getNonMatchingActiveJobIds(jobId: string, uuid: string): EventRequestEntry[];
     removeEntryByUUID(uuid: string): void;
     get(uuid: string): EventRequestEntry | undefined;

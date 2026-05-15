@@ -15,7 +15,13 @@ export declare class Worker {
     getState(): 'IDLE' | 'PROCESSING';
     getQueue(): QueueEntry[];
     isIdle(): boolean;
+    private determineRequestMapEntryState;
+    private getJobToWaitFor;
     processMessage(queueItem: QueueEntry): Promise<void>;
+    private getNonMatchingActiveJobIds;
+    private getIsJobIDAlreadyBeingProcessed;
+    private getHasInputChanged;
+    private logStateMessages;
     private processNextIfAvailable;
     getState_Full(): WorkerState;
 }

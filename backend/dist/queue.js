@@ -41,8 +41,7 @@ class RequestMap {
     getAll() {
         return Array.from(this.entries.values());
     }
-    //modify this to return an array of matching entries instead of just one, since there could be multiple entries with the same jobId
-    getJobId(jobId) {
+    getMatchingJobId(jobId) {
         const matchingJobs = [];
         for (const entry of this.entries.values()) {
             if (entry.jobId === jobId) {
@@ -51,18 +50,18 @@ class RequestMap {
         }
         return matchingJobs;
     }
-    getActiveJobIds(jobId) {
-        const matchingJobs = [];
-        for (const entry of this.entries.values()) {
-            if (entry.jobId === jobId && (entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING')) {
-                matchingJobs.push(entry);
+    getActiveJobsMatchingJobId(jobId) {
+        const matchingActiveJobs = [];
+        for (const entry of this.getMatchingJobId(jobId)) {
+            if (entry.status === 'PROCESSING' || entry.status === 'WAITING' || entry.status === 'CANCELLING') {
+                matchingActiveJobs.push(entry);
             }
         }
-        return matchingJobs;
+        return matchingActiveJobs;
     }
     getNonMatchingActiveJobIds(jobId, uuid) {
         const matchingJobs = [];
-        for (const entry of this.getActiveJobIds(jobId)) {
+        for (const entry of this.getActiveJobsMatchingJobId(jobId)) {
             if (entry.uuid !== uuid) {
                 matchingJobs.push(entry);
             }
